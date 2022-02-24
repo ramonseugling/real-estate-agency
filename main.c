@@ -4,7 +4,7 @@
 #include <string.h>
 #include <pthread.h>
 
-/* CONSTANTS */
+/* CONSTANTS OF TENANTS AND REALTORS*/
 #define TENANTS_AMOUNT 10
 #define REALTORS_AMOUNT 5
 
@@ -28,6 +28,8 @@ int available_real_state[15] = {15, 33, 58, 99, 105, 203, 178};
 int unavailable_real_state[15];
 
 /*functions*/
+void *addRealState(void *arg);
+void *deleteRealState(void *arg);
 void *rentRealState(void *arg);
 void *returnRealState(void *arg);
 void *makeAvailableRealState(void *arg);
@@ -39,11 +41,15 @@ int main() {
     srand(time(NULL));
 
     int count = 0;
+
     while (count++ < 50) {
         if (execute_rent == 0) {
             sleep(4);
         }
 
+        execute_add = rand()%8;
+        execute_remove = rand()%8;
+        execute_return = rand()%4;
         execute_rent = rand()%2;
 
         if (execute_rent == 1) {
@@ -65,7 +71,27 @@ int main() {
             }
         }
 
-        if (execute_return == 1) { o
+        if (execute_add == 1 ){
+            // implement
+        }
+
+        if (execute_remove == 1 ){
+            int realStateIndex = (intptr_t) rand()%20;
+
+            if (available_real_state[realStateIndex] != 0){
+
+                struct args *realtor = (struct args *)malloc(sizeof(struct args));
+
+                int x = rand()%5;
+
+                realtor->counter = realStateIndex;
+                realtor->tenant = x;
+
+                pthread_create(&realtors[x], NULL, deleteRealState, (void *) realtor);
+            }
+        }
+
+        if (execute_return == 1) { 
             int execute_return = 0;
             int realStateId = (intptr_t) rand()%15; 
 
@@ -96,17 +122,31 @@ int main() {
     exit(EXIT_SUCCESS);
 }
 
+void *addRealState(void *arg){
+  // implement
+}
+
+void *deleteRealState(void *arg){
+  int tenantId = ((struct args*) arg)->tenant;
+  int realStateIndex = ((struct args*) arg)->counter;
+
+  printf("Corretor %d removeu o imóvel: %d\n", tenantId, available_real_state[realStateIndex]);
+  available_real_state[realStateIndex] = 0;
+  pthread_exit(NULL);
+  return NULL;
+}
+
 void *rentRealState(void *arg) {
     int count = 0;
 
-    int realStateIndex = ((struct args*) arg)->counter;
     int tenantId = ((struct args*) arg)->tenant;
+    int realStateIndex = ((struct args*) arg)->counter;
 
     if (available_real_state[realStateIndex] != 0) {
         while(count++ < 16) {
             if (unavailable_real_state[count] == 0) {
                 unavailable_real_state[count] = available_real_state[realStateIndex];
-                printf("Inquilino %d aluga imovel %d\n", tenantId, available_real_state[realStateIndex]);
+                printf("Inquilino %d alugou o imóvel %d\n", tenantId, available_real_state[realStateIndex]);
                 available_real_state[realStateIndex] = 0;
                 break; 
             }
@@ -118,25 +158,17 @@ void *rentRealState(void *arg) {
     return NULL;
 }
 
-void *returnRealState(void *arg){
-  int realState = ((struct args*) arg)->counter;
-  int tenant = ((struct args*) arg)->tenant;
-
-  printf("Inquilino %d devolveu o imovel: %d\n", tenant, unavailable_real_state[realState]);
-  pthread_exit(NULL);
-  return NULL;
-}
 
 void *makeAvailableRealState(void *arg){
   int count = 0;
-  int realState = ((struct args*) arg)->counter;
   int realtor = ((struct args*) arg)->tenant;
+  int realState = ((struct args*) arg)->counter;
 
 
   while(count++ < 16){
     if(available_real_state[count] == 0) { 
       available_real_state[count] = unavailable_real_state[realState];
-      printf("Corretor %d disponibiliza o imovel: %d\n", realtor, available_real_state[count]);
+      printf("Corretor %d disponibiliza o imóvel: %d\n", realtor, available_real_state[count]);
       unavailable_real_state[realState] = 0;
       break;
     }
@@ -146,3 +178,11 @@ void *makeAvailableRealState(void *arg){
   return NULL;
 }
 
+void *returnRealState(void *arg){
+  int tenant = ((struct args*) arg)->tenant;
+  int realState = ((struct args*) arg)->counter;
+
+  printf("Inquilino %d devolveu o imóvel: %d\n", tenant, unavailable_real_state[realState]);
+  pthread_exit(NULL);
+  return NULL;
+}
