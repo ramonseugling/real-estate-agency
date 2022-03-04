@@ -4,6 +4,9 @@
 #include <string.h>
 #include <pthread.h>
 
+#include "imovel.h"
+
+
 /* CONSTANTS OF TENANTS AND REALTORS*/
 #define TENANTS_AMOUNT 10
 #define REALTORS_AMOUNT 5
@@ -14,6 +17,7 @@ struct args {
 };
 
 int counter = (intptr_t) 0;
+int code = 0;
 
 /* threads */
 int execute_rent = 1; 
@@ -27,18 +31,32 @@ int available_real_state[15] = {15, 33, 58, 99, 105, 203, 178};
 /*unavailable real states*/
 int unavailable_real_state[15];
 
+char address[][200] = {"Rua Ilha Três Irmãs, 12", "Avenida Osmar Cunha, 789", "Rodovia Cardoso, 700", "Rua Marco Antonio, 987", "Avenida das Flores, 500"};
+char district[][200] = {"Ingleses", "Barra da Lagoa", "Carianos", "Saco dos Limoes", "Coqueiros"};
+
+imovel_t rs; 
+
 /*functions*/
 void *addRealState(void *arg);
 void *deleteRealState(void *arg);
 void *rentRealState(void *arg);
 void *returnRealState(void *arg);
 void *makeAvailableRealState(void *arg);
+imovel_t RandomRealState();
 
 int main() {
     pthread_t tenants[TENANTS_AMOUNT];
     pthread_t realtors[REALTORS_AMOUNT];
 
     srand(time(NULL));
+
+    printf("Imóveis criados:\n");
+
+    for(int i=0;i<10;i++) {
+        rs = RandomRealState();
+        available_real_state[i] = rs.codigo;
+        printf("Código: %d, Rua: %s, Bairro: %s, Preço: %d\n", rs.codigo, rs.endereco, rs.bairro, rs.preco);
+    }
 
     int count = 0;
 
@@ -47,7 +65,7 @@ int main() {
             sleep(4);
         }
 
-        execute_add = rand()%8;
+        // execute_add = rand()%8;
         execute_remove = rand()%8;
         execute_return = rand()%4;
         execute_rent = rand()%2;
@@ -58,7 +76,7 @@ int main() {
             int countRent = (intptr_t) 0;
             int realStateId = (intptr_t) 0;
 
-            while (realStateId == 0 && countRent++ != 15) {
+            while (realStateId == 0 && countRent++ != 10) {
                 realStateId = available_real_state[countRent];
             }
 
@@ -71,9 +89,21 @@ int main() {
             }
         }
 
-        if (execute_add == 1 ){
-            // implement
-        }
+        // if (execute_add == 1 ){
+        //     int realStateIndex = (intptr_t) rand()%20;
+
+        //     if (available_real_state[realStateIndex] != 0){
+
+        //         struct args *realtor = (struct args *)malloc(sizeof(struct args));
+
+        //         int x = rand()%5;
+
+        //         realtor->counter = realStateIndex;
+        //         realtor->tenant = x;
+
+        //         pthread_create(&realtors[x], NULL, addRealState, (void *) realtor);
+        //     }
+        // }
 
         if (execute_remove == 1 ){
             int realStateIndex = (intptr_t) rand()%20;
@@ -122,9 +152,29 @@ int main() {
     exit(EXIT_SUCCESS);
 }
 
-void *addRealState(void *arg){
-  // implement
+imovel_t RandomRealState(){
+  code = code + rand()%50;
+  imovel_t rs;
+  rs.codigo = code;
+  rs.preco = 250 + rand()%300;
+  strcpy(rs.endereco,address[rand()%(sizeof(address)/CHAR_SIZE)]);
+  strcpy(rs.bairro,district[rand()%(sizeof(district)/CHAR_SIZE)]);
+  return rs;
 }
+
+// void *addRealState(void *arg){
+
+//   int tenantId = ((struct args*) arg)->tenant;
+//   int realStateIndex = ((struct args*) arg)->counter;
+
+//   printf("Corretor %d adicionou o imóvel: %d\n", tenantId, available_real_state[realStateIndex]);
+
+
+//   printf("Corretor %d adicionou o imóvel: %d\n", tenantId, available_real_state[realStateIndex]);
+//   available_real_state[realStateIndex] = 0;
+//   pthread_exit(NULL);
+//   return NULL;
+// }
 
 void *deleteRealState(void *arg){
   int tenantId = ((struct args*) arg)->tenant;
