@@ -18,6 +18,7 @@ struct args {
 
 int counter = (intptr_t) 0;
 int code = 0;
+const int CHAR_SIZE = 200;
 
 /* threads */
 int execute_rent = 1; 
